@@ -6,7 +6,7 @@
 # ctf-usb-hid-tool
 
 This project was made because there was no other tool that would give me the right solution to an ECSC ctf challenge.
-The challenge in mind can be found inside [tests](https://github.com/TheRealH0u/ctf-usb-hid-tool/tests) folder.
+The challenge in mind can be found inside [tests](/tests) folder.
 
 ## Usage
 ```bash

@@ -23,3 +23,4 @@ extractedKeys = subprocess.check_output("tshark -r "+sys.argv[1]+" -Y 'usb.capda
 ## To do
 - [ ] Add bsnoop compatibility
 - [ ] Add more scan codes (INSERT, PAGE UP, PAGE DN, etc.)
+- [ ] Change how lovercase and uppercase key codes are stored

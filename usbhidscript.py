@@ -1,15 +1,9 @@
 import sys
 import subprocess
 
-# declare -A lcasekey
 lcasekey = {}
-# declare -A ucasekey
 ucasekey = {}
 
-# associate USB HID scan codes with keys
-# ex: key 4  can be both "a" and "A", depending on if SHIFT is held down
-# LEFT SHIFT = first two bytes are 02
-# RIGHT SHIFT = first two bytes are 20
 lcasekey[4] = "a"
 ucasekey[4] = "A"
 lcasekey[5] = "b"
@@ -239,7 +233,6 @@ if (len(sys.argv)) == 2:
 	for line in extractedKeys:
 		line = line.split(":")
 		hexKey = int(line[2], 16)
-		#print(line)
 		if hexKey in ucasekey:
 			if line[3] == "00":
 				#LCTRL and RCTRL

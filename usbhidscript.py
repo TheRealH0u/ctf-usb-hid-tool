@@ -84,8 +84,8 @@ lcasekey[39] = "0"
 ucasekey[39] = ")"
 lcasekey[40] = "Enter"
 ucasekey[40] = "Enter"
-lcasekey[41] = "esc"
-ucasekey[41] = "esc"
+lcasekey[41] = "<esc>"
+ucasekey[41] = "<esc>"
 lcasekey[42] = "backspace"
 ucasekey[42] = "backspace"
 lcasekey[43] = "tab"
@@ -128,10 +128,15 @@ lcasekey[76] = "del"
 ucasekey[77] = "end"
 lcasekey[77] = "end"
 
-lcasekey[79] = "RightArrow"
-ucasekey[79] = "RightArrow"
-lcasekey[80] = "LeftArrow"
-ucasekey[80] = "LeftArrow"
+lcasekey[79] = "Right"
+ucasekey[79] = "Right"
+lcasekey[80] = "Left"
+ucasekey[80] = "Left"
+lcasekey[81] = "Down"
+ucasekey[81] = "Down"
+lcasekey[82] = "Up"
+ucasekey[82] = "Up"
+
 lcasekey[84] = "/"
 ucasekey[84] = "/"
 lcasekey[85] = "*"
@@ -166,8 +171,9 @@ lcasekey[99] = "."
 ucasekey[99] = "."
 
 # Predefine variables that are gonna be used
-outString = ""
+outString = [""]
 position = 0
+oSline = 0 #Short for outStringline
 
 def isEnter(data):
 	if ucasekey[data] == "Enter":
@@ -177,53 +183,75 @@ def isEnter(data):
 
 def USBHIDFunction(data):
 	global outString
+	global oSline
 	global position
 	if data == "Enter" or data == "tab":
-		print(outString)
-		outString = ""
+		outString.append("")
+		oSline += 1
 	elif data == "space":
-		outString += " "
-	elif data == "LeftArrow":
+		outString[oSline] += " "
+	elif data == "Left":
 		position -= 1
-	elif data == "RightArrow":
+	elif data == "Right":
 		position += 1
+	elif data == "Up":
+		oSline -= 1
+	elif data == "Down":
+		oSline += 1
 	elif data == "del":
-		txtLeft, txtRight = outString[:len(outString)+position],outString[len(outString)+position:]
+		txtLeft, txtRight = outString[oSline][:len(outString[oSline])+position],outString[oSline][len(outString[oSline])+position:]
 		txtRight = txtRight[1:]
-		outString = txtLeft + txtRight
+		outString[oSline] = txtLeft + txtRight
 		position += 1
 	elif data == "backspace":
-		txtLeft, txtRight = outString[:len(outString)+position],outString[len(outString)+position:]
+		txtLeft, txtRight = outString[oSline][:len(outString[oSline])+position],outString[oSline][len(outString[oSline])+position:]
 		txtLeft = txtLeft[:-1]
-		outString = txtLeft + txtRight
+		outString[oSline] = txtLeft + txtRight
 	elif data == "home":
-		position = -len(outString)
+		position = -len(outString[oSline])
 	elif data == "end":
 		position = 0
 	else:
-		txtLeft, txtRight = outString[:len(outString)+position],outString[len(outString)+position:]
+		txtLeft, txtRight = outString[oSline][:len(outString[oSline])+position],outString[oSline][len(outString[oSline])+position:]
 		txtLeft += data
-		outString = txtLeft + txtRight
+		outString[oSline] = txtLeft + txtRight
 		
 
 
 if (len(sys.argv)) == 2:
 	if sys.argv[1].endswith(".pcapng") or sys.argv[1].endswith(".pcap"):
-		extractedKeys = subprocess.check_output("tshark -r "+sys.argv[1]+" -Y 'usb.capdata && usb.data_len == 8' -T fields -e usb.capdata | sed 's/../:&/g2'", shell=True) 
+		extractedKeys = subprocess.check_output("tshark -r ./"+sys.argv[1]+" -Y 'usb.capdata && usb.data_len == 8' -T fields -e usb.capdata | sed 's/../:&/g2'", shell=True) 
 		extractedKeys = extractedKeys.decode("utf-8")
 		extractedKeys = extractedKeys.splitlines()
+	elif sys.argv[1].endswith(".bsnoop"):
+		extractedKeys = subprocess.check_output("tshark -r ./"+sys.argv[1]+" -Y 'btatt.opcode == 0x1b && btatt.handle == 0x002c && btatt.value != 00:00:00:00:00:00:00' -T fields -e btatt.value | sed 's/.*:00/00:&/'")
+		extractedKeys = extractedKeys.decode("utf-8")
+		extractedKeys = extractedKeys.splitlines()
+	else:
+		with open(sys.argv[1], "r") as f:
+			lines = f.readlines()
+			extractedKeys = []
+			for line in lines:
+				if line != "\n":
+					extractedKeys.append(line)
 		
-		for line in extractedKeys:
-			line = line.split(":")
-			hexKey = int(line[2], 16)
-			if hexKey in ucasekey:
+		
+	for line in extractedKeys:
+		line = line.split(":")
+		hexKey = int(line[2], 16)
+		#print(line)
+		if hexKey in ucasekey:
+			if line[3] == "00":
+				#LCTRL and RCTRL
+				if line[0] == "01" or line[0] == "10":
+					# TO DO
+					print("CTRL+"+lcasekey[hexKey])
 				#LSHIFT, RSHIFT and RALT
-				if line[0] == "02" or line[0] == "20" or line[0] == "40":
+				elif line[0] == "02" or line[0] == "20" or line[0] == "40":
 					USBHIDFunction(ucasekey[hexKey])
 				else:
 					USBHIDFunction(lcasekey[hexKey])
-		print(outString)
-	else:
-		print("[!] Only .pcapng/.pcap files")
+	for s in outString:
+		print(s)
 else:
 	print("[?] python3 usb-hid-script.py [filename/.pcapng/.pcap]")

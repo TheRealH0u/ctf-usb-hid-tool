@@ -129,7 +129,7 @@ position = 0
 oSline = 0 #Short for outStringline
 
 def isEnter(data):
-	if ucasekey[data] == "Enter":
+	if ucasekey[data] == "enter":
 		return True
 	else:
 		return False
@@ -138,18 +138,18 @@ def USBHIDFunction(data):
 	global outString
 	global oSline
 	global position
-	if data == "Enter" or data == "tab":
+	if data == "enter" or data == "tab":
 		outString.append("")
 		oSline += 1
 	elif data == "space":
 		outString[oSline] += " "
-	elif data == "Left":
+	elif data == "left":
 		position -= 1
-	elif data == "Right":
+	elif data == "right":
 		position += 1
-	elif data == "Up":
+	elif data == "up":
 		oSline -= 1
-	elif data == "Down":
+	elif data == "down":
 		oSline += 1
 	elif data == "del":
 		txtLeft, txtRight = outString[oSline][:len(outString[oSline])+position],outString[oSline][len(outString[oSline])+position:]

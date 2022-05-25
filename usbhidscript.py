@@ -128,12 +128,6 @@ outString = [""]
 position = 0
 oSline = 0 #Short for outStringline
 
-def isEnter(data):
-	if ucasekey[data] == "enter":
-		return True
-	else:
-		return False
-
 def USBHIDFunction(data):
 	global outString
 	global oSline

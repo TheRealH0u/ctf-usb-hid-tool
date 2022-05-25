@@ -4,165 +4,124 @@ import subprocess
 lcasekey = {}
 ucasekey = {}
 
-lcasekey[4] = "a"
-ucasekey[4] = "A"
-lcasekey[5] = "b"
-ucasekey[5] = "B"
-lcasekey[6] = "c"
-ucasekey[6] = "C"
-lcasekey[7] = "d"
-ucasekey[7] = "D"
-lcasekey[8] = "e"
-ucasekey[8] = "E"
-lcasekey[9] = "f"
-ucasekey[9] = "F"
-lcasekey[10] = "g"
-ucasekey[10] = "G"
-lcasekey[11] = "h"
-ucasekey[11] = "H"
-lcasekey[12] = "i"
-ucasekey[12] = "I"
-lcasekey[13] = "j"
-ucasekey[13] = "J"
-lcasekey[14] = "k"
-ucasekey[14] = "K"
-lcasekey[15] = "l"
-ucasekey[15] = "L"
-lcasekey[16] = "m"
-ucasekey[16] = "M"
-lcasekey[17] = "n"
-ucasekey[17] = "N"
-lcasekey[18] = "o"
-ucasekey[18] = "O"
-lcasekey[19] = "p"
-ucasekey[19] = "P"
-lcasekey[20] = "q"
-ucasekey[20] = "Q"
-lcasekey[21] = "r"
-ucasekey[21] = "R"
-lcasekey[22] = "s"
-ucasekey[22] = "S"
-lcasekey[23] = "t"
-ucasekey[23] = "T"
-lcasekey[24] = "u"
-ucasekey[24] = "U"
-lcasekey[25] = "v"
-ucasekey[25] = "V"
-lcasekey[26] = "w"
-ucasekey[26] = "W"
-lcasekey[27] = "x"
-ucasekey[27] = "X"
-lcasekey[28] = "y"
-ucasekey[28] = "Y"
-lcasekey[29] = "z"
-ucasekey[29] = "Z"
-lcasekey[30] = "1"
-ucasekey[30] = "!"
-lcasekey[31] = "2"
-ucasekey[31] = "@"
-lcasekey[32] = "3"
-ucasekey[32] = "#"
-lcasekey[33] = "4"
-ucasekey[33] = "$"
-lcasekey[34] = "5"
-ucasekey[34] = "%"
-lcasekey[35] = "6"
-ucasekey[35] = "^"
-lcasekey[36] = "7"
-ucasekey[36] = "&"
-lcasekey[37] = "8"
-ucasekey[37] = "*"
-lcasekey[38] = "9"
-ucasekey[38] = "("
-lcasekey[39] = "0"
-ucasekey[39] = ")"
-lcasekey[40] = "Enter"
-ucasekey[40] = "Enter"
-lcasekey[41] = "<esc>"
-ucasekey[41] = "<esc>"
-lcasekey[42] = "backspace"
-ucasekey[42] = "backspace"
-lcasekey[43] = "tab"
-ucasekey[43] = "tab"
-lcasekey[44] = "space"
-ucasekey[44] = "space"
-lcasekey[45] = "-"
-ucasekey[45] = "_"
-lcasekey[46] = "="
-ucasekey[46] = "+"
-lcasekey[47] = "["
-ucasekey[47] = "{"
-lcasekey[48] = "]"
-ucasekey[48] = "}"
-lcasekey[49] = "\\"
-ucasekey[49] = "|"
-lcasekey[50] = " "
-ucasekey[50] = " "
-lcasekey[51] = ";"
-ucasekey[51] = ":"
-lcasekey[52] = "'"
-ucasekey[52] = "\""
-lcasekey[53] = "`"
-ucasekey[53] = "~"
-lcasekey[54] = ","
-ucasekey[54] = "<"
-lcasekey[55] = "."
-ucasekey[55] = ">"
-lcasekey[56] = "/"
-ucasekey[56] = "?"
-lcasekey[57] = "CapsLock"
-ucasekey[57] = "CapsLock"
-
-ucasekey[74] = "home"
-lcasekey[74] = "home"
-
-ucasekey[76] = "del"
-lcasekey[76] = "del"
-
-ucasekey[77] = "end"
-lcasekey[77] = "end"
-
-lcasekey[79] = "Right"
-ucasekey[79] = "Right"
-lcasekey[80] = "Left"
-ucasekey[80] = "Left"
-lcasekey[81] = "Down"
-ucasekey[81] = "Down"
-lcasekey[82] = "Up"
-ucasekey[82] = "Up"
-
-lcasekey[84] = "/"
-ucasekey[84] = "/"
-lcasekey[85] = "*"
-ucasekey[85] = "*"
-lcasekey[86] = "-"
-ucasekey[86] = "-"
-lcasekey[87] = "+"
-ucasekey[87] = "+"
-lcasekey[88] = "Enter"
-ucasekey[88] = "Enter"
-lcasekey[89] = "1"
-ucasekey[89] = "1"
-lcasekey[90] = "2"
-ucasekey[90] = "2"
-lcasekey[91] = "3"
-ucasekey[91] = "3"
-lcasekey[92] = "4"
-ucasekey[92] = "4"
-lcasekey[93] = "5"
-ucasekey[93] = "5"
-lcasekey[94] = "6"
-ucasekey[94] = "6"
-lcasekey[95] = "7"
-ucasekey[95] = "7"
-lcasekey[96] = "8"
-ucasekey[96] = "8"
-lcasekey[97] = "9"
-ucasekey[97] = "9"
-lcasekey[98] = "0"
-ucasekey[98] = "0"
-lcasekey[99] = "."
-ucasekey[99] = "."
+"""
+Modifier masks - used for the first byte in the HID report.
+NOTE: The second byte in the report is reserved, 0x00
+"""
+MODMASK = {
+	0x01 : "LCTRL",
+	0x02 : "LSHIFT",
+	0x04 : "LALT",
+	0x08 : "LMETA",
+	0x10 : "RCTRL",
+	0x20 : "RSHIFT",
+	0x40 : "RALT",
+	0x80 : "RMETA"
+}
+KEY = {
+	0x00 : ["none","none"],
+	0x01 : ["[Keyboard Error Roll Over]", "[Keyboard Error Roll Over]"], # NOTE: Used for all slots if too many keys are pressed
+	# 0x02 //  Keyboard POST Fail
+	# 0x03 //  Keyboard Error Undefined
+	0x04 : ["a", "A"],
+	0x05 : ["b", "B"],
+	0x06 : ["c", "C"],
+	0x07 : ["d", "D"],
+	0x08 : ["e", "E"],
+	0x09 : ["f", "F"],
+	0x0a : ["g", "G"],
+	0x0b : ["h", "H"],
+	0x0c : ["i", "I"],
+	0x0d : ["j", "J"],
+	0x0e : ["k", "K"],
+	0x0f : ["l", "L"],
+	0x10 : ["m", "M"],
+	0x11 : ["n", "N"],
+	0x12 : ["o", "O"],
+	0x13 : ["p", "P"],
+	0x14 : ["q", "Q"],
+	0x15 : ["r", "R"],
+	0x16 : ["s", "S"],
+	0x17 : ["t", "T"],
+	0x18 : ["u", "U"],
+	0x19 : ["v", "V"],
+	0x1a : ["w", "W"],
+	0x1b : ["x", "X"],
+	0x1c : ["y", "Y"],
+	0x1d : ["z", "Z"],
+	0x1e : ["1", "!"],
+	0x1f : ["2", "@"],
+	0x20 : ["3", "#"],
+	0x21 : ["4", "$"],
+	0x22 : ["5", "%"],
+	0x23 : ["6", "^"],
+	0x24 : ["7", "&"],
+	0x25 : ["8", "*"],
+	0x26 : ["9", "("],
+	0x27 : ["0", ")"],
+	0x28 : ["enter", "enter"],
+	0x29 : ["<esc>", "<esc>"],
+	0x2a : ["backspace", "backspace"],
+	0x2b : ["tab", "tab"],
+	0x2c : ["spacebar", "spacebar"],
+	0x2d : ["-", "_"],
+	0x2e : ["=", "+"],
+	0x2f : ["[", "{"],
+	0x30 : ["]", "}"],
+	0x31 : ["\\", "|"],
+	0x32 : ["#", "~"],
+	0x33 : [";", ":"],
+	0x34 : ["'", "\""],
+	0x35 : ["`", "~"],
+	0x36 : [",", "<"],
+	0x37 : [".", ">"],
+	0x38 : ["/", "?"],
+	0x39 : ["caps", "caps"],
+	0x3a : ["f1", "f1"],
+	0x3b : ["f2", "f2"],
+	0x3c : ["f3", "f3"],
+	0x3d : ["f4", "f4"],
+	0x3e : ["f5", "f5"],
+	0x3f : ["f6", "f6"],
+	0x40 : ["f7", "f7"],
+	0x41 : ["f8", "f8"],
+	0x42 : ["f9", "f9"],
+	0x43 : ["f10", "f10"],
+	0x44 : ["f11", "f11"],
+	0x45 : ["f12", "f12"],
+	0x46 : ["print", "print"],
+	0x47 : ["scrollLock", "scrollLock"],
+	0x48 : ["pause", "pause"],
+	0x49 : ["insert", "insert"],
+	0x4a : ["home", "home"],
+	0x4b : ["pageUp", "pageUp"],
+	0x4c : ["delete", "delete"],
+	0x4d : ["end", "end"],
+	0x4e : ["pageDown", "pageDown"],
+	0x4f : ["right", "right"],
+	0x50 : ["left", "left"],
+	0x51 : ["down", "down"],
+	0x52 : ["up", "up"]
+}
+NUMPAD = {
+	0x53 : ["numLock", "numLock"],
+	0x54 : ["/", "/"],
+	0x55 : ["*", "*"],
+	0x56 : ["-", "-"],
+	0x57 : ["+", "+"],
+	0x58 : ["enter", "enter"],
+	0x59 : ["1", "end"],
+	0x5a : ["2", "down"],
+	0x5b : ["3", "pageDn"],
+	0x5c : ["4", "left"],
+	0x5d : ["5", "5"],
+	0x5e : ["6", "right"],
+	0x5f : ["7", "home"],
+	0x60 : ["8", "up"],
+	0x61 : ["9", "pageUp"],
+	0x62 : ["0", "insert"],
+	0x63 : [".", "delete"]
+}
 
 # Predefine variables that are gonna be used
 outString = [""]

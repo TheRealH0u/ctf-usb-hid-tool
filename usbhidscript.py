@@ -312,9 +312,6 @@ def is_valid_file(parser, arg):
     else:
         return arg
 
-def outFile(text:str):
-	pass
-
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description='script to decode USB HDI Keyboard scan codes to string')
 	

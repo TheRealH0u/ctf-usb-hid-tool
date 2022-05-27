@@ -1,6 +1,7 @@
 import sys
 import subprocess
 from pathlib import Path
+import argparse
 
 """
 Modifier masks - used for the first byte in the HID report.
@@ -180,25 +181,22 @@ def USBHIDFunction(data: str):
 		txtLeft += data
 		outString[oSline] = txtLeft + txtRight
 
-def main(file:str, errors="", numberLines=False):
-	if errors == "count":
-		count = {}
-
+def run(args):
 	# pcapng/pcap extraction
-	if file.endswith(".pcapng") or file.endswith(".pcap"):
-		extractedKeys = subprocess.check_output("tshark -r ./"+file+" -Y 'usb.capdata && usb.data_len == 8' -T fields -e usb.capdata | sed 's/../:&/g2'", shell=True) 
+	if args.file.endswith(".pcapng") or args.file.endswith(".pcap"):
+		extractedKeys = subprocess.check_output("tshark -r "+args.file+" -Y 'usb.capdata && usb.data_len == 8' -T fields -e usb.capdata | sed 's/../:&/g2'", shell=True) 
 		extractedKeys = extractedKeys.decode("utf-8")
 		extractedKeys = extractedKeys.splitlines()
 
 	# bsnoop extraction
-	elif file.endswith(".bsnoop"):
-		extractedKeys = subprocess.check_output("tshark -r ./"+file+" -Y 'btatt.opcode == 0x1b && btatt.handle == 0x002c && btatt.value != 00:00:00:00:00:00:00' -T fields -e btatt.value | sed 's/.*:00/00:&/'")
+	elif args.file.endswith(".bsnoop"):
+		extractedKeys = subprocess.check_output("tshark -r "+args.file+" -Y 'btatt.opcode == 0x1b && btatt.handle == 0x002c && btatt.value != 00:00:00:00:00:00:00' -T fields -e btatt.value | sed 's/.*:00/00:&/'")
 		extractedKeys = extractedKeys.decode("utf-8")
 		extractedKeys = extractedKeys.splitlines()
 
 	# other files where hex values can be extracted
 	else:
-		with open(file, "r") as f:
+		with open(args.file, "r") as f:
 			lines = f.readlines()
 			extractedKeys = []
 			for line in lines:
@@ -206,107 +204,136 @@ def main(file:str, errors="", numberLines=False):
 					extractedKeys.append(line)
 
 
+	count = {}
+	
 	for line in extractedKeys:
 
 		line = line.split(":")
 
 		try:
 			# NOTE: Bytes from 2 - 7 are keys pressed.
-			# We check if the user pressed multiple keys together
+			# We check if the user stopped pressing multiple keys together
 			if line[3] == "00":
+
 				#LCTRL and RCTRL
 				if line[0] == "01" or line[0] == "10":
 					# TODO: Add CTRL functions like CTRL + C/V/A/X
 					print("CTRL+"+KEY[line[2]][0])
+
 				#LSHIFT, RSHIFT and RALT
 				elif line[0] == "02" or line[0] == "20" or line[0] == "40":
 					USBHIDFunction(KEY[line[2]][1])
+
 				else:
 					USBHIDFunction(KEY[line[2]][0])
-		except Exception as e:
-			if errors == "all":
-				print(HIDERRORS[line[2]])
-			elif errors == "count":
-				try:
-					count[line[2]] = count[line[2]] + 1
-				except:
-					count[line[2]] = 1
-			pass
 
-	# Output section of the program
-	print("Output:")
-	if numberLines:
+		except Exception as e:
+			if args.count_errors:
+				try:
+					count[HIDERRORS[line[2]]] = count[HIDERRORS[line[2]]] + 1
+
+				except:
+					count[HIDERRORS[line[2]]] = 1
+
+	# * Output section of the program
+	if args.line_number:
 		for s in range(0, len(outString)):
 			print(s+1,":",outString[s])
 	else:
 		for s in outString:
 			print(s)
 
-	if errors == "count":
+	if args.count_errors:
 		print("-"*10+"ERRORS"+"-"*10)
-		for k,v in count:
-			print(k," : ",v)
+		for k,v in count.items():
+			print("{:25s} : {:5d}".format(k,v))
 
-def error(no:int, flag=""):
-	"""
-	Function to throw errors
-	"""
-	if no == 0:
-		print("[ERROR] No parameters were specified. Please use -h for help")
-	elif no == 1:
-		print("[ERROR] File does not exits. Please use -h for help")
-	elif no == 2:
-		print("[ERROR] -e can't be empty. Please use -h for help")
-	elif no == 3:
-		print("[ERROR] -h can only be used by itself")
-	elif no == 4:
-		print("[ERROR] {:s} unknown flag. Please use -h for help".format(flag))
-	sys.exit()
+def debug(args):
+	# pcapng/pcap extraction
+	if args.file.endswith(".pcapng") or args.file.endswith(".pcap"):
+		extractedKeys = subprocess.check_output("tshark -r "+args.file+" -Y 'usb.capdata && usb.data_len == 8' -T fields -e usb.capdata | sed 's/../:&/g2'", shell=True) 
+		extractedKeys = extractedKeys.decode("utf-8")
+		extractedKeys = extractedKeys.splitlines()
 
-def help():
-	print("USAGE: python3 usbhidscript.py [file]")
-	print("Use the script to decode USB HDI Keyboard codes to")
-	print("Example: python3 usbhidscript.py captured.pcapng\n")
-	print("Flag options:")
-	print("{:>10s} {:15s} {:s}".format("-e", "all/count", "Show errors"))
-	print("{:>10s} {:15s} {:s}".format("-n", "", "Number lines"))
-	#print("{:>10s} {:15s} {:s}".format("-", "", ""))
+	# bsnoop extraction
+	elif args.file.endswith(".bsnoop"):
+		extractedKeys = subprocess.check_output("tshark -r "+args.file+" -Y 'btatt.opcode == 0x1b && btatt.handle == 0x002c && btatt.value != 00:00:00:00:00:00:00' -T fields -e btatt.value | sed 's/.*:00/00:&/'")
+		extractedKeys = extractedKeys.decode("utf-8")
+		extractedKeys = extractedKeys.splitlines()
 
-	sys.exit()
+	# other files where hex values can be extracted
+	else:
+		with open(args.file, "r") as f:
+			lines = f.readlines()
+			extractedKeys = []
+			for line in lines:
+				if line != "\n":
+					extractedKeys.append(line)
+	
+	for line in extractedKeys:
+
+		line = line.split(":")
+
+		# NOTE: Bytes from 2 - 7 are keys pressed.
+		# We check if the user stopped pressing multiple keys together
+		if line[3] == "00":
+
+			#LCTRL and RCTRL
+			if line[0] == "01" or line[0] == "10":
+				# TODO: Add CTRL functions like CTRL + C/V/A/X
+				if line[2] in KEY:
+					print("CTRL+"+KEY[line[2]][0])
+				elif line[2] in NUMPAD:
+					print("CTRL+"+NUMPAD[line[2][0]])
+				elif line[2] in HIDERRORS:
+					print(HIDERRORS[line[2]])
+
+			#LSHIFT, RSHIFT and RALT
+			elif line[0] == "02" or line[0] == "20" or line[0] == "40":
+				if line[2] in KEY:
+					print(KEY[line[2]][1])
+				elif line[2] in NUMPAD:
+					print(NUMPAD[line[2]][1])
+				elif line[2] in HIDERRORS:
+					print(HIDERRORS[line[2]])
+
+			else:
+				if line[2] in KEY:
+					print(KEY[line[2]][0])
+				elif line[2] in NUMPAD:
+					print(NUMPAD[line[2]][0])
+				elif line[2] in HIDERRORS:
+					print(HIDERRORS[line[2]])
+
+def is_valid_file(parser, arg):
+	# Checks if a file exists
+    if not Path(arg).is_file():
+        parser.error("The file %s does not exist!" % arg)
+    else:
+        return arg
+
+def outFile(text:str):
+	pass
 
 if __name__ == "__main__":
-	args = sys.argv[1:]
-
-	# If no arguments we terminate the program
-	if len(args) == 0:
-		error(0)
-	# We check if theres is only one argument. Its the file or -h
+	parser = argparse.ArgumentParser(description='script to decode USB HDI Keyboard scan codes to string')
 	
-	else:
-		if args[0] == "-h":
-			help()
-		
-		if Path(args[0]).is_file():
-				file = args[0]
-		else:
-			error(1)
+	subparsers = parser.add_subparsers(dest="group")
 
-		errors = ""
-		numberLines = False
-		for i in range(1, len(args)):
-			if args[i] == "-h":
-				error(3)
-			# ! NO ERROR: python3 usbhidscript.py tests/ECSC.pcapng -e -n
-			if args[i] == "-e":
-				try:
-					errors = args[i+1]
-					continue
-				except:
-					error(2)
-			if args[i] == "-n":
-				numberLines = True
-				continue
-			else:
-				error(4, args[i])
-				
-		main(file, errors, numberLines)
+	# All the other commands
+
+	mainCommandsParser = subparsers.add_parser("run", help="Run normal commands")
+	mainCommandsParser.add_argument("file", metavar="FILE", type=lambda x: is_valid_file(parser, x), help="File to be decoded")
+	mainCommandsParser.add_argument("-n", "--line-number", help="print line number with output lines", action="store_true")
+	mainCommandsParser.add_argument("-e", "--count-errors", action="store_true", help="print number of errors")
+	
+	# Debug command
+
+	debugParser = subparsers.add_parser("debug", help="Used to debug the output of the file")
+	debugParser.add_argument("file", metavar="FILE", type=lambda x: is_valid_file(parser, x), help="File to be debugged")
+	
+	args = parser.parse_args()
+	if args.group == "debug":
+		debug(args)
+	elif args.group == "run":
+		run(args)
